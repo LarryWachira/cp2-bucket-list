@@ -17,10 +17,10 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///chum/chum.sqlite3'
 
 
-class TestingConfig(DevelopmentConfig):
+class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///'
     SECRET_KEY = 'abcdefghijklmnopqrstuvwxyz1234567890'
 
 
