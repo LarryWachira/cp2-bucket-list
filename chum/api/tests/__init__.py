@@ -1,7 +1,7 @@
 import unittest
 
-from .. import create_app, db
-from ..models import User, BucketList, BucketListItem
+from chum import create_app, db
+from chum.models import User, BucketList, BucketListItem
 
 
 class BaseTestCase(unittest.TestCase):
