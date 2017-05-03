@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
+
 db = SQLAlchemy()
 
 
@@ -13,7 +14,8 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    username = db.Column(db.String(50), nullable=False, unique=True)
+    username = db.Column(db.String(50), nullable=False, index=True,
+                         unique=True)
     email = db.Column(db.String(64), nullable=True, unique=True)
     password_hash = db.Column(db.String(128))
     bucket_lists = db.relationship('BucketList', backref='user',
