@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import current_app
+from flask import current_app, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -60,6 +60,9 @@ class BucketList(db.Model):
     def __repr__(self):
         return '<Bucket list: {}>'.format(self.name)
 
+    def get_url(self):
+        return url_for('single_bucketlist', id=self.id, _external=True)
+
 
 class BucketListItem(db.Model):
     __tablename__ = 'items'
@@ -76,3 +79,7 @@ class BucketListItem(db.Model):
 
     def __repr__(self):
         return '<Bucket list item: {}>'.format(self.name)
+
+    def get_url(self):
+        return url_for('edit_bucketlist_item', id=self.id,
+                       bucket_list_id=self.bucket_list_id, _external=True)
