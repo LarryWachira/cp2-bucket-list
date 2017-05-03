@@ -14,7 +14,8 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///chum/chum.sqlite3'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + Config.BASE_DIR + \
+                              '/chum/chum.sqlite3'
 
 
 class TestingConfig(Config):
