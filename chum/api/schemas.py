@@ -35,7 +35,10 @@ class UserLoginSchema(Schema):
 
 class BucketListItemSchema(Schema):
     id = fields.Integer(dump_only=True)
-    name = fields.String(required=True)
+    name = fields.String(required=True,
+                         error_messages={
+                             'required': 'Please send a bucketlist name'}
+                         )
     description = fields.String()
     date_created = fields.DateTime(dump_only=True)
     date_modified = fields.DateTime(dump_only=True)
@@ -52,7 +55,10 @@ class BucketListItemSchema(Schema):
 
 class BucketListSchema(Schema):
     id = fields.Integer(dump_only=True)
-    name = fields.String(required=True)
+    name = fields.String(required=True,
+                         error_messages={
+                             'required': 'Please send an item name'}
+                         )
     items = fields.Nested(BucketListItemSchema, dump_only=True, many=True)
     date_created = fields.DateTime(dump_only=True)
     date_modified = fields.DateTime(dump_only=True)
@@ -67,8 +73,9 @@ class BucketListSchema(Schema):
         return obj.get_url()
 
 
-bucketlists_schema = BucketListSchema(exclude=('items',), many=True)
+get_bucketlists_schema = BucketListSchema(exclude=('items',), many=True)
 single_bucketlist_schema = BucketListSchema()
+bucketlist_item_schema = BucketListItemSchema()
 login_schema = UserLoginSchema()
 register_schema = UserRegisterSchema()
 
