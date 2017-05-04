@@ -53,6 +53,11 @@ class BucketListItemSchema(Schema):
         return obj.get_url()
 
 
+class BucketListItemEditSchema(Schema):
+    name = fields.String()
+    description = fields.String()
+
+
 class BucketListSchema(Schema):
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True,
@@ -76,6 +81,7 @@ class BucketListSchema(Schema):
 get_bucketlists_schema = BucketListSchema(exclude=('items',), many=True)
 single_bucketlist_schema = BucketListSchema()
 bucketlist_item_schema = BucketListItemSchema()
+edit_bucketlist_item_schema = BucketListItemEditSchema()
 login_schema = UserLoginSchema()
 register_schema = UserRegisterSchema()
 
