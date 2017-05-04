@@ -3,7 +3,11 @@ from datetime import datetime
 from flask import current_app, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import (
+    TimedJSONWebSignatureSerializer as Serializer,
+    BadSignature,
+    SignatureExpired
+)
 
 
 db = SQLAlchemy()
@@ -13,10 +17,10 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(64), nullable=True)
     username = db.Column(db.String(50), nullable=False, index=True,
                          unique=True)
-    email = db.Column(db.String(64), nullable=True, unique=True)
+    email = db.Column(db.String(64), nullable=False, unique=True)
     password_hash = db.Column(db.String(128))
     bucket_lists = db.relationship('BucketList', backref='user',
                                    lazy='dynamic',
@@ -33,15 +37,17 @@ class User(db.Model):
 
     def generate_auth_token(self, expires_in=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
-        return s.dumps({'id': self.id}).decode('utf-8')
+        return 'Bearer ' + s.dumps({'id': self.id}).decode('utf-8')
 
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except BadSignature:
             return "Invalid token"
+        except SignatureExpired:
+            return "Token expired"
         return User.query.get(data['id'])
 
 
