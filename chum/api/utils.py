@@ -9,7 +9,7 @@ def error_response(validation_errors=None,
     if validation_errors:
         response = jsonify(
             {'status': status, 'error': error,
-             'error(s)': validation_errors,
+             'validation_error(s)': validation_errors,
              'message': message}
         )
 
@@ -23,10 +23,27 @@ def error_response(validation_errors=None,
     return response
 
 
-def success_response(message, status=200):
-    response = jsonify(
-        {'status': status,
-         'message': message}
-    )
+def success_response(message, status=200, added=None, modified=None):
+
+    if added:
+        response = jsonify(
+            {'status': status,
+             'message': message,
+             'added': added}
+        )
+
+    elif modified:
+        response = jsonify(
+            {'status': status,
+             'message': message,
+             'modified': modified}
+        )
+
+    else:
+        response = jsonify(
+            {'status': status,
+             'message': message}
+        )
+
     response.status_code = status
     return response
