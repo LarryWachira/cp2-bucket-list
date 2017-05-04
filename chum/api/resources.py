@@ -1,13 +1,14 @@
 from flask import g, request, jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 
 from .auth import auth_token
 from .utils import error_response, success_response
 from .schemas import (
-    bucketlists_schema,
+    get_bucketlists_schema,
     single_bucketlist_schema,
     login_schema,
-    register_schema
+    register_schema,
+    bucketlist_item_schema
 )
 from ..models import (
     db,
@@ -18,6 +19,8 @@ from ..models import (
 
 
 class UserAPI(Resource):
+    """ A resource class to manage registration and logging in over the API """
+
     def post(self, arg):
         # logging in
         if arg == 'login':
@@ -63,7 +66,9 @@ class UserAPI(Resource):
                     return response
 
                 else:
-                    return error_response(message='The password is incorrect')
+                    return error_response(message='The password is incorrect',
+                                          status=422,
+                                          error='Unprocessable entity')
 
             else:
                 return error_response(message='No data was sent to the server')
@@ -131,42 +136,132 @@ class UserAPI(Resource):
 
 
 class BucketListsAPI(Resource):
+    """ A resource class to handle requests for many bucketlists """
     decorators = [auth_token.login_required]
+
     def get(self):
-        bucketlists = BucketList.query.all()
+        # get bucketlists belonging to current user
+        current_user_id = g.user.id
+        bucketlists = BucketList.query.filter_by(user_id=current_user_id).all()
+
         if not bucketlists:
             return success_response(message='No bucketlists have been added')
-        result = bucketlists_schema.dump(list(bucketlists))
+
+        result = get_bucketlists_schema.dump(list(bucketlists))
         return jsonify(result.data)
 
     def post(self):
-        pass
+        print('\n\n\n\n\nrequest:', request.get_json(), '\n\n\n\n\n')
+        if request.get_json():
+            result, errors = single_bucketlist_schema.load(request.get_json())
+
+            if errors:
+                return error_response(validation_errors=errors)
+
+            # create bucketlist object
+            bucketlist = BucketList(name=result['name'])
+            current_user = g.user
+            bucketlist.user = current_user
+
+            # add new bucketlist to the db
+            db.session.add(bucketlist)
+            db.session.commit()
+
+            return success_response(message="Bucketlist successfully created",
+                                    status=201,
+                                    added=single_bucketlist_schema.dump(
+                                        bucketlist).data
+                                    )
+
+        else:
+            return error_response(status=400, error='Bad Request',
+                                  message='No data was sent to the server')
 
 
 class BucketListAPI(Resource):
+    """ A resource class to handle requests for a single bucketlist """
     decorators = [auth_token.login_required]
+
+    def get_bucketlist_object(self, id):
+        # fetch bucketlists belonging to user
+        current_user_id = g.user.id
+
+        # fetch specified bucketlist
+        bucketlist = BucketList.query.filter_by(
+            user_id=current_user_id).filter_by(id=id).first()
+
+        if not bucketlist:
+            return error_response(
+                message="Bucketlist {} was not found".format(id),
+                status=404, error='Not found'
+            )
+
+        return bucketlist
+
     def get(self, id):
-        bucketlist = BucketList.query.get(id)
+        bucketlist = self.get_bucketlist_object(id)
+
+        # return error response if not bucketlist object
+        if not isinstance(bucketlist, BucketList):
+            return bucketlist
+
+        # serialize bucketlist and return the result
         result = single_bucketlist_schema.dump(bucketlist)
         return jsonify(result.data)
 
-    def put(self):
-        pass
+    def put(self, id):
+        # check that the request contains data
+        print('\n\n\n\n\nrequest:', request.get_json(), '\n\n\n\n\n')
+        if request.get_json():
+            result, errors = single_bucketlist_schema.load(request.get_json())
 
-    def delete(self):
-        pass
+            if errors:
+                return error_response(validation_errors=errors)
+
+            bucketlist = self.get_bucketlist_object(id)
+
+            # return error response if not bucketlist object
+            if type(bucketlist) is not BucketList:
+                return bucketlist
+
+            # edit the bucketlist
+            new_name = result['name']
+            bucketlist.name = new_name
+
+            db.session.add(bucketlist)
+            db.session.commit()
+
+            return success_response(message='Bucketlist successfully modified',
+                                    modified=single_bucketlist_schema.dump(
+                                     bucketlist).data
+                                    )
+
+        else:
+            return error_response(status=400, error='Bad Request',
+                                  message='No data was sent to the server')
+
+    def delete(self, id):
+        bucketlist = self.get_bucketlist_object(id)
+
+        # delete specified bucketlist
+        db.session.delete(bucketlist)
+        db.session.commit()
+
+        return success_response(message='Bucketlist successfully '
+                                'deleted', status=204)
 
 
 class BucketListItemsAPI(Resource):
     @auth_token.login_required
-    def post(self):
+    def post(self, id):
         pass
 
 
 class BucketListItemAPI(Resource):
     decorators = [auth_token.login_required]
-    def put(self):
+
+    def put(self, bucket_list_id, id):
         pass
 
-    def delete(self):
+    def delete(self, bucket_list_id, id):
         pass
