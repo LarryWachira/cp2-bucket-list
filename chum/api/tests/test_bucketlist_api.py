@@ -10,7 +10,7 @@ class TestBucketListApi(BaseTestCase):
 
         response = self.client.get('/api/v1/bucketlists/', headers={
             "Authorization": self.user_token})
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_create_bucket_list(self):
         """ Test creating a bucketlist """
@@ -18,29 +18,32 @@ class TestBucketListApi(BaseTestCase):
         response = self.client.post('/api/v1/bucketlists/',
                                     data=json.dumps({'name': 'test'}),
                                     headers={
-                                        "Authorization": self.user_token})
-        self.assertTrue(response.status_code == 201)
+                                        "Authorization": self.user2_token},
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 201)
 
     def test_edit_bucket_list(self):
         """ Test editing a bucketlist """
 
-        response = self.client.put('/api/v1/bucketlists/5',
+        response = self.client.put('/api/v1/bucketlists/1',
                                    data=json.dumps({'name': 'test_trial'}),
                                    headers={
-                                       "Authorization": self.user_token})
-        self.assertTrue(response.status_code == 201)
+                                       "Authorization": self.user_token},
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, 200)
 
     def test_fetch_single_bucket_list(self):
         """ Test fetching a single bucketlist """
 
-        response = self.client.get('/api/v1/bucketlists/5', headers={
-            "Authorization": self.user_token})
-        self.assertTrue(response.status_code == 200)
+        response = self.client.get('/api/v1/bucketlists/1',
+                                   headers={
+                                       "Authorization": self.user_token})
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_bucket_list(self):
         """ Test deleting a bucketlist """
 
-        response = self.client.delete('/api/v1/bucketlists/5',
+        response = self.client.delete('/api/v1/bucketlists/1',
                                       headers={
                                           "Authorization": self.user_token})
-        self.assertTrue(response.status_code == 204)
+        self.assertEqual(response.status_code, 204)
