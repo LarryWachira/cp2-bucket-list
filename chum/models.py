@@ -79,7 +79,7 @@ class BucketListItem(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now)
     date_modified = db.Column(db.DateTime, default=datetime.now,
                               onupdate=datetime.now)
-    done = db.Column(db.Boolean, default=False)
+    done = db.Column(db.Boolean, default=False, nullable=False)
     bucket_list_id = db.Column(db.Integer, db.ForeignKey('bucket_lists.id'),
                                nullable=False)
 
