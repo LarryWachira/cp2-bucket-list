@@ -20,7 +20,7 @@ def create_app(config_name):
         config_name = default_config_name
 
     # initialize Flask instance
-    app = Flask(__name__, instance_relative_config=True, static_folder=None)
+    app = Flask(__name__, instance_relative_config=False, static_folder=None)
 
     # fetch configuration settings
     try:
