@@ -8,8 +8,8 @@ from .api.resources import (
     UserAPI,
     BucketListsAPI,
     BucketListAPI,
-    BucketListItemsAPI,
-    BucketListItemAPI
+    BucketListAddItemAPI,
+    BucketListEditItemAPI
 )
 
 
@@ -44,17 +44,18 @@ def create_app(config_name):
                      endpoint='user_login_and_register')
 
     api.add_resource(BucketListsAPI, '/api/v1/bucketlists',
-                     '/api/v1/bucketlists/', endpoint='fetch_bucketlists')
+                     '/api/v1/bucketlists/',
+                     endpoint='fetch_or_add_bucketlists')
 
     api.add_resource(BucketListAPI, '/api/v1/bucketlists/<int:id>',
                      endpoint='single_bucketlist')
 
-    api.add_resource(BucketListItemsAPI,
+    api.add_resource(BucketListAddItemAPI,
                      '/api/v1/bucketlists/<int:id>/items',
                      '/api/v1/bucketlists/<int:id>/items/',
                      endpoint='add_bucketlist_item')
 
-    api.add_resource(BucketListItemAPI,
+    api.add_resource(BucketListEditItemAPI,
                      '/api/v1/bucketlists/<int:bucket_list_id>/items/<int:id>',
                      endpoint='edit_bucketlist_item')
 
