@@ -34,6 +34,7 @@ def create_app(config_name):
         app.config.from_pyfile('config.py')
 
     # initialize the application for use with SQLAlchemy
+    from chum import models  # important to persist db data on runserver!
     db.init_app(app)
 
     # initialize flask-migrate with the flask cli
