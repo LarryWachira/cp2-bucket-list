@@ -8,8 +8,8 @@ from .api.resources import (
     UserAPI,
     BucketListsAPI,
     BucketListAPI,
-    BucketListItemsAPI,
-    BucketListItemAPI
+    BucketListAddItemAPI,
+    BucketListEditItemAPI
 )
 
 
@@ -29,9 +29,12 @@ def create_app(config_name):
         print("\n\t Invalid configuration key: '{}'. Defaulting...\n".format(
             e.args[0]))
         app.config.from_object(app_configuration[default_config_name])
-    app.config.from_pyfile('config.py')
+
+    if config_name == 'development':
+        app.config.from_pyfile('config.py')
 
     # initialize the application for use with SQLAlchemy
+    from chum import models  # important to persist db data on runserver!
     db.init_app(app)
 
     # initialize flask-migrate with the flask cli
@@ -44,17 +47,18 @@ def create_app(config_name):
                      endpoint='user_login_and_register')
 
     api.add_resource(BucketListsAPI, '/api/v1/bucketlists',
-                     '/api/v1/bucketlists/', endpoint='fetch_bucketlists')
+                     '/api/v1/bucketlists/',
+                     endpoint='fetch_or_add_bucketlists')
 
     api.add_resource(BucketListAPI, '/api/v1/bucketlists/<int:id>',
                      endpoint='single_bucketlist')
 
-    api.add_resource(BucketListItemsAPI,
+    api.add_resource(BucketListAddItemAPI,
                      '/api/v1/bucketlists/<int:id>/items',
                      '/api/v1/bucketlists/<int:id>/items/',
                      endpoint='add_bucketlist_item')
 
-    api.add_resource(BucketListItemAPI,
+    api.add_resource(BucketListEditItemAPI,
                      '/api/v1/bucketlists/<int:bucket_list_id>/items/<int:id>',
                      endpoint='edit_bucketlist_item')
 

@@ -17,7 +17,12 @@ class TestBucketListApi(BaseTestCase):
 
         response = self.client.get('/api/v1/bucketlists?limit=1', headers={
             "Authorization": self.user_token})
-        self.assertTrue(response.data['page'] is not None)
+        self.assertTrue(b'page' in response.get_data())
+
+        # get dictionary of response body
+        data = json.loads(response.get_data(as_text=True))
+        # test that the limit argument is 1
+        self.assertEqual(data['limit'], 1)
 
     def test_create_bucket_list(self):
         """ Test creating a bucketlist """

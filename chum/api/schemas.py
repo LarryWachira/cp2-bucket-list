@@ -9,7 +9,11 @@ class UserRegisterSchema(Schema):
         error_messages={
             'required': 'A username is required to register'}
     )
-    email = fields.Email(load_only=True, validate=[validate.Length(max=64)])
+    email = fields.Email(required=True, load_only=True,
+                         validate=[validate.Length(max=64)],
+                         error_messages={
+                             'required': 'An email is required to register'}
+                         )
     password = fields.String(
         required=True,
         load_only=True,
@@ -37,12 +41,12 @@ class BucketListItemSchema(Schema):
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True,
                          error_messages={
-                             'required': 'Please send a bucketlist name'}
+                             'required': 'Please send an item name'}
                          )
     description = fields.String()
     date_created = fields.DateTime(dump_only=True)
     date_modified = fields.DateTime(dump_only=True)
-    done = fields.Boolean(dump_only=True)
+    done = fields.Boolean()
     url = fields.Method('get_url', dump_only=True)
 
     class Meta:
@@ -56,13 +60,14 @@ class BucketListItemSchema(Schema):
 class BucketListItemEditSchema(Schema):
     name = fields.String()
     description = fields.String()
+    done = fields.Boolean()
 
 
 class BucketListSchema(Schema):
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True,
                          error_messages={
-                             'required': 'Please send an item name'}
+                             'required': 'Please send a bucketlist name'}
                          )
     items = fields.Nested(BucketListItemSchema, dump_only=True, many=True)
     date_created = fields.DateTime(dump_only=True)

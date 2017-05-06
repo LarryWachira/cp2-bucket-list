@@ -11,7 +11,7 @@ auth_token = HTTPTokenAuth("Bearer")
 @auth_token.verify_token
 def verify_auth_token(token):
     g.user = User.verify_auth_token(token)
-    return g.user not in ['Invalid token', 'Token expired']
+    return g.user not in ['Invalid token', 'Token expired', None]
 
 
 @auth_token.error_handler

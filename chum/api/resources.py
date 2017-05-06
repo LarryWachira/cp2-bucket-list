@@ -1,4 +1,4 @@
-from flask import g, request, jsonify
+from flask import g, request, jsonify, url_for
 from flask_restful import Resource
 
 from .auth import auth_token
@@ -141,15 +141,71 @@ class BucketListsAPI(Resource):
     decorators = [auth_token.login_required]
 
     def get(self):
-        # get bucketlists belonging to current user
+        # obtain pagination arguments from the URL's query string
+        page = request.args.get('page', 1, type=int)
+        max_limit = 100
+        request_limit = request.args.get('limit', 20, type=int)
+        limit = min(request_limit, max_limit)
+        search_term = request.args.get('q', None, type=str)
+
+        # get paginated bucketlists belonging to current user
         current_user_id = g.user.id
-        bucketlists = BucketList.query.filter_by(user_id=current_user_id).all()
 
-        if not bucketlists:
-            return success_response(message='No bucketlists have been added')
+        # all bucketlists
+        if not search_term:
+            paginated_bucketlists = BucketList.query.filter_by(
+                user_id=current_user_id).paginate(page, limit, error_out=True)
 
-        result = get_bucketlists_schema.dump(list(bucketlists))
-        return jsonify(result.data)
+        # searched bucketlists if search url argument exists
+        else:
+            paginated_bucketlists = BucketList.query.filter_by(
+                user_id=current_user_id).filter(BucketList.name.ilike(
+                 '%' + search_term + '%')).paginate(page, limit,
+                                                    error_out=True)
+
+        # return 404 if the user doesn't have bucketlists
+        if not paginated_bucketlists.items:
+            return error_response(error='Not found', status=404,
+                                  message='No bucketlists have been added')
+
+        # obtain prev_url and next_url
+        if paginated_bucketlists.has_prev:
+            previous_url = url_for(request.endpoint,
+                                   q=search_term, limit=limit,
+                                   page=paginated_bucketlists.prev_num,
+                                   _external=True)
+        else:
+            previous_url = None
+
+        if paginated_bucketlists.has_next:
+            next_url = url_for(request.endpoint,
+                               q=search_term, limit=limit,
+                               page=paginated_bucketlists.next_num,
+                               _external=True)
+        else:
+            next_url = None
+
+        # obtain first and last urls
+        first_url = url_for(request.endpoint, q=search_term, limit=limit,
+                            page=1, _external=True)
+        last_url = url_for(request.endpoint, q=search_term,
+                           limit=limit, page=paginated_bucketlists.pages,
+                           _external=True)
+
+        # serialize bucketlist objects
+        result = get_bucketlists_schema.dump(list(paginated_bucketlists.items))
+
+        return jsonify({
+            'page': page,
+            'limit': limit,
+            'pages': paginated_bucketlists.pages,
+            'prev_url': previous_url,
+            'next_url': next_url,
+            'first_url': first_url,
+            'last_url': last_url,
+            'total': paginated_bucketlists.total,
+            'bucketlist(s)': result.data
+        })
 
     def post(self):
         print('\n\n\n\n\nrequest:', request.get_json(), '\n\n\n\n\n')
@@ -290,10 +346,12 @@ class BucketListAddItemAPI(Resource):
             else:
                 name = result['name']
                 description = result.get('description')
+                done = result.get('done')
 
                 # create bucketlist item object
                 bucketlist_item = BucketListItem(name=name,
-                                                 description=description)
+                                                 description=description,
+                                                 done=done)
 
                 # relate item to bucket list
                 bucketlist_item.bucket_list = bucketlist
@@ -360,13 +418,16 @@ class BucketListEditItemAPI(Resource):
 
             elif result.get('name') and not result.get('description'):
                 bucketlist_item.name = result['name']
+                bucketlist_item.done = result.get('done') or False
 
             elif not result.get('name') and result.get('description'):
                 bucketlist_item.description = result['description']
+                bucketlist_item.done = result.get('done') or False
 
             else:
                 bucketlist_item.name = result['name']
                 bucketlist_item.description = result['description']
+                bucketlist_item.done = result.get('done') or False
 
             # add modified bucket list item to db
             db.session.add(bucketlist_item)
