@@ -20,7 +20,7 @@ def create_app(config_name):
         config_name = default_config_name
 
     # initialize Flask instance
-    app = Flask(__name__, instance_relative_config=False, static_folder=None)
+    app = Flask(__name__, instance_relative_config=True, static_folder=None)
 
     # fetch configuration settings
     try:
@@ -29,7 +29,9 @@ def create_app(config_name):
         print("\n\t Invalid configuration key: '{}'. Defaulting...\n".format(
             e.args[0]))
         app.config.from_object(app_configuration[default_config_name])
-    app.config.from_pyfile('config.py')
+
+    if config_name == 'development':
+        app.config.from_pyfile('config.py')
 
     # initialize the application for use with SQLAlchemy
     db.init_app(app)
