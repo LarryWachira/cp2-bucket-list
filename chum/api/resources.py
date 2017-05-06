@@ -8,7 +8,8 @@ from .schemas import (
     single_bucketlist_schema,
     login_schema,
     register_schema,
-    bucketlist_item_schema
+    bucketlist_item_schema,
+    edit_bucketlist_item_schema
 )
 from ..models import (
     db,
@@ -243,6 +244,10 @@ class BucketListAPI(Resource):
     def delete(self, id):
         bucketlist = self.get_bucketlist_object(id)
 
+        # return error response if not bucketlist object
+        if not isinstance(bucketlist, BucketList):
+            return bucketlist
+
         # delete specified bucketlist
         db.session.delete(bucketlist)
         db.session.commit()
@@ -251,17 +256,142 @@ class BucketListAPI(Resource):
                                 'deleted', status=204)
 
 
-class BucketListItemsAPI(Resource):
+class BucketListAddItemAPI(Resource):
+    """ A resource class to handle requests for adding a bucketlist item """
     @auth_token.login_required
     def post(self, id):
-        pass
+
+        if request.get_json():
+            bucket_list_id = id
+
+            # validate request data
+            result, errors = bucketlist_item_schema.load(
+                request.get_json())
+
+            # return validation errors if any
+            if errors:
+                return error_response(validation_errors=errors)
+
+            # fetch bucket list
+            bucketlist = BucketList.query.get(bucket_list_id)
+
+            response = error_response(status=404, error='Not found',
+                                      message='Bucketlist {} does not '
+                                              'exist'.format(bucket_list_id))
+
+            # verify that the bucketlist exists
+            if not bucketlist:
+                return response
+
+            # verify bucketlist is owned by the current user
+            elif bucketlist.user != g.user:
+                return response
+
+            else:
+                name = result['name']
+                description = result.get('description')
+
+                # create bucketlist item object
+                bucketlist_item = BucketListItem(name=name,
+                                                 description=description)
+
+                # relate item to bucket list
+                bucketlist_item.bucket_list = bucketlist
+
+                # add bucket list item to db
+                db.session.add(bucketlist_item)
+                db.session.commit()
+
+                return success_response(
+                    message="Bucketlist item successfully created",
+                    status=201,
+                    added=bucketlist_item_schema.dump(
+                        bucketlist_item).data
+                    )
+
+        else:
+            return error_response(status=400, error='Bad Request',
+                                  message='No data was sent to the server')
 
 
-class BucketListItemAPI(Resource):
+class BucketListEditItemAPI(Resource):
+    """ A resource class to handle requests for editing a bucketlist item """
     decorators = [auth_token.login_required]
 
+    def get_bucket_list_item_object(self, bucket_list_id, id):
+        # fetch objects
+        bucketlist = BucketList.query.get(bucket_list_id)
+        bucketlist_item = BucketListItem.query.get(id)
+
+        response_404 = error_response(status=404, error='Not found',
+                                      message='Bucketlist {} does not '
+                                      'exist'.format(bucket_list_id))
+
+        # return 404 if bucket list owner is not current user
+        if bucketlist.user != g.user:
+            return response_404
+
+        # return 404 if bucket list does not exist
+        elif not bucketlist:
+            return response_404
+
+        # return 404 if bucket list item does not exist
+        elif not bucketlist_item:
+            return response_404
+
+        # return item object
+        else:
+            return bucketlist_item
+
     def put(self, bucket_list_id, id):
-        pass
+        if request.get_json():
+            bucketlist_item = self.get_bucket_list_item_object(
+                bucket_list_id, id)
+
+            # return 404 if not object
+            if not isinstance(bucketlist_item, BucketListItem):
+                return bucketlist_item
+
+            # validate request data and modify item attributes accordingly
+            result, errors = edit_bucketlist_item_schema.load(
+                request.get_json())
+            if errors:
+                return error_response(validation_errors=errors)
+
+            elif result.get('name') and not result.get('description'):
+                bucketlist_item.name = result['name']
+
+            elif not result.get('name') and result.get('description'):
+                bucketlist_item.description = result['description']
+
+            else:
+                bucketlist_item.name = result['name']
+                bucketlist_item.description = result['description']
+
+            # add modified bucket list item to db
+            db.session.add(bucketlist_item)
+            db.session.commit()
+
+            return success_response(
+                message="Bucketlist item successfully modified",
+                modified=bucketlist_item_schema.dump(
+                    bucketlist_item).data
+            )
+
+        else:
+            return error_response(status=400, error='Bad Request',
+                                  message='No data was sent to the server')
 
     def delete(self, bucket_list_id, id):
-        pass
+        bucketlist_item = self.get_bucket_list_item_object(bucket_list_id, id)
+
+        # return error response if not bucketlist object
+        if not isinstance(bucketlist_item, BucketListItem):
+            return bucketlist_item
+
+        # delete specified bucketlist
+        db.session.delete(bucketlist_item)
+        db.session.commit()
+
+        return success_response(message='Bucketlist item successfully '
+                                        'deleted', status=204)

@@ -12,6 +12,13 @@ class TestBucketListApi(BaseTestCase):
             "Authorization": self.user_token})
         self.assertEqual(response.status_code, 200)
 
+    def test_that_get_all_bucket_lists_paginates(self):
+        """ Test that get bucketlists response is paginated """
+
+        response = self.client.get('/api/v1/bucketlists?limit=1', headers={
+            "Authorization": self.user_token})
+        self.assertTrue(response.data['page'] is not None)
+
     def test_create_bucket_list(self):
         """ Test creating a bucketlist """
 

@@ -24,7 +24,7 @@ class TestBucketListItemsApi(BaseTestCase):
                                    headers={
                                         "Authorization": self.user_token},
                                    content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_bucket_list_item(self):
         """ Test deleting a bucketlist item """
