@@ -29,18 +29,14 @@ class BaseTestCase(unittest.TestCase):
             username='larry2',
             email='larry2@example.org'
         )
-        self.user2.set_password('password')
+        self.user2.set_password('password2')
 
         self.user3 = User(
             name='Larry Wachira Muchiri',
             username='larry3',
             email='larry3@example.org'
         )
-        self.user3.set_password('password')
-
-        self.user_token = self.user.generate_auth_token()
-        self.user2_token = self.user.generate_auth_token()
-        self.user3_token = self.user.generate_auth_token()
+        self.user3.set_password('password3')
 
         self.user_bucket_list = BucketList(
             name='travel',
@@ -98,6 +94,14 @@ class BaseTestCase(unittest.TestCase):
             self.user3_bucket_list_item
         ])
         db.session.commit()
+
+        user = User.query.filter_by(username='larry').first()
+        user2 = User.query.filter_by(username='larry2').first()
+        user3 = User.query.filter_by(username='larry3').first()
+
+        self.user_token = user.generate_auth_token()
+        self.user2_token = user2.generate_auth_token()
+        self.user3_token = user3.generate_auth_token()
 
     def tearDown(self):
         db.session.remove()
