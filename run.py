@@ -32,8 +32,10 @@ manager = Manager(app)
 
 @manager.command
 def migrations():
-    """ Runs a single migrations command that runs entire migrations setup 
-    from start. """
+    """ 
+    Runs a single migrations command that runs entire migrations setup 
+    from start. 
+    """
 
     if not os.path.isdir(Config.BASE_DIR + '/migrations/'):
         os.system('flask db init')
@@ -47,10 +49,8 @@ def migrations():
 
 @manager.command
 def tests():
-    """ 
-    Runs tests on chum
-        
-    """
+    """ Runs tests on chum  """
+
     os.system('nosetests -v --cover-package=chum')
 
 

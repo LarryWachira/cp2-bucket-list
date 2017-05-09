@@ -208,7 +208,6 @@ class BucketListsAPI(Resource):
         })
 
     def post(self):
-        print('\n\n\n\n\nrequest:', request.get_json(), '\n\n\n\n\n')
         if request.get_json():
             result, errors = single_bucketlist_schema.load(request.get_json())
 
@@ -268,7 +267,6 @@ class BucketListAPI(Resource):
 
     def put(self, id):
         # check that the request contains data
-        print('\n\n\n\n\nrequest:', request.get_json(), '\n\n\n\n\n')
         if request.get_json():
             result, errors = single_bucketlist_schema.load(request.get_json())
 
@@ -278,7 +276,7 @@ class BucketListAPI(Resource):
             bucketlist = self.get_bucketlist_object(id)
 
             # return error response if not bucketlist object
-            if type(bucketlist) is not BucketList:
+            if not isinstance(bucketlist, BucketList):
                 return bucketlist
 
             # edit the bucketlist

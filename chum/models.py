@@ -44,10 +44,10 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except BadSignature:
-            return "Invalid token"
         except SignatureExpired:
             return "Token expired"
+        except BadSignature:
+            return "Invalid token"
         return User.query.get(data['id'])
 
 
