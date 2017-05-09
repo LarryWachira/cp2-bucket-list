@@ -50,7 +50,6 @@ def tests():
     """ 
     Runs tests on chum
         
-    ** All nosetests command options and arguments can be used
     """
     os.system('nosetests -v --cover-package=chum')
 
