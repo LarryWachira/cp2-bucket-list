@@ -35,7 +35,7 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expires_in=3600*24):
+    def generate_auth_token(self, expires_in=3600*24*7):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
         return 'Bearer ' + s.dumps({'id': self.id}).decode('utf-8')
 
@@ -60,7 +60,8 @@ class BucketList(db.Model):
     date_modified = db.Column(db.DateTime, default=datetime.now,
                               onupdate=datetime.now, nullable=False)
     items = db.relationship('BucketListItem', backref='bucket_list',
-                            lazy='dynamic', cascade="all, delete-orphan")
+                            lazy='dynamic', cascade="all, delete-orphan",
+                            order_by='desc(BucketListItem.date_modified)')
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __repr__(self):
