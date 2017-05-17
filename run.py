@@ -1,6 +1,7 @@
 import os
 
 from flask_script import Manager
+from flask_migrate import MigrateCommand
 
 from chum import create_app
 from config import Config
@@ -28,6 +29,7 @@ def internal_server_error(e):
                           "overloaded or there is an error in the application")
 
 manager = Manager(app)
+manager.add_command('db', MigrateCommand)
 
 
 @manager.command
@@ -38,13 +40,13 @@ def migrations():
     """
 
     if not os.path.isdir(Config.BASE_DIR + '/migrations/'):
-        os.system('flask db init')
+        os.system('python run.py db init')
     else:
         print('\n\tA migrations folder already exists skipping "db '
               'init"...\n')
 
-    os.system('flask db migrate')
-    os.system('flask db upgrade')
+    os.system('python run.py db migrate')
+    os.system('python run.py db upgrade')
 
 
 @manager.command
