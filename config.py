@@ -6,8 +6,10 @@ class Config(object):
     DEBUG = False
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
-    SECRET_KEY = os.getenv('SECRET_KEY')
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI') or \
+        'sqlite:///' + BASE_DIR + '/chum/chum.sqlite3'
+    SECRET_KEY = os.getenv('SECRET_KEY') or \
+        'abcd_1234_very_secret_key_that_is_secure'
 
 
 class DevelopmentConfig(Config):
