@@ -33,7 +33,7 @@ class TestUserAPI(BaseTestCase):
         response = self.client.post("/api/v1/auth/login",
                                     data=json.dumps(user),
                                     content_type='application/json')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 422)
 
         # test with user that exists but with invalid password
         user = {"username": "larry",
