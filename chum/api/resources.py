@@ -451,10 +451,6 @@ class BucketListEditItemAPI(Resource):
                 bucketlist_item.name = result['name']
                 bucketlist_item.done = result.get('done') or False
 
-            elif result.get('name') and not result.get('description'):
-                bucketlist_item.name = result['name']
-                bucketlist_item.done = result.get('done') or False
-
             else:
                 bucketlist_item.name = result['name']
                 bucketlist_item.done = result.get('done') or False
