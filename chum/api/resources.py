@@ -50,9 +50,10 @@ class UserAPI(Resource):
                     user = User.query.filter_by(email=email.lower()).first()
 
                 if not user:
-                    return error_response(status=404, error='Not found',
-                                          message='The user {} does not exist'
-                                                  .format(username or email))
+                    return error_response(status=422,
+                                          error='Unprocessable entity',
+                                          message='The password or '
+                                                  'username is incorrect')
 
                 # check password and return token if valid
                 password = result.get('password')
@@ -61,13 +62,15 @@ class UserAPI(Resource):
                     response = jsonify(
                         {'status': 200,
                          'message': 'Login successful',
-                         'token': '{}'.format(token)}
+                         'token': '{}'.format(token),
+                         'username': user.username}
                     )
                     response.status_code = 200
                     return response
 
                 else:
-                    return error_response(message='The password is incorrect',
+                    return error_response(message='The password or username '
+                                                  'is incorrect',
                                           status=422,
                                           error='Unprocessable entity')
 
@@ -154,16 +157,23 @@ class BucketListsAPI(Resource):
         # all bucketlists
         if not search_term:
             paginated_bucketlists = BucketList.query.filter_by(
-                user_id=current_user_id).paginate(page, limit, error_out=True)
+                user_id=current_user_id).order_by(
+                BucketList.date_modified.desc()).paginate(
+                page, limit, error_out=True)
 
         # searched bucketlists if search url argument exists
         else:
             paginated_bucketlists = BucketList.query.filter_by(
                 user_id=current_user_id).filter(BucketList.name.ilike(
-                 '%' + search_term + '%')).paginate(page, limit,
-                                                    error_out=True)
+                 '%' + search_term + '%')).order_by(
+                BucketList.date_modified.desc()).paginate(
+                page, limit, error_out=True)
 
         # return 404 if the user doesn't have bucketlists
+        if not paginated_bucketlists.items and search_term:
+            return error_response(error='Not found', status=404,
+                                  message='No results')
+
         if not paginated_bucketlists.items:
             return error_response(error='Not found', status=404,
                                   message='No bucketlists have been added')
@@ -204,7 +214,7 @@ class BucketListsAPI(Resource):
             'first_url': first_url,
             'last_url': last_url,
             'total': paginated_bucketlists.total,
-            'bucketlist(s)': result.data
+            'bucketlists': result.data
         })
 
     def post(self):
@@ -213,6 +223,10 @@ class BucketListsAPI(Resource):
 
             if errors:
                 return error_response(validation_errors=errors)
+
+            if not result['name'].strip():
+                return error_response(status=400, error='Bad Request',
+                                      message='Please input a valid name')
 
             # create bucketlist object
             bucketlist = BucketList(name=result['name'])
@@ -279,6 +293,10 @@ class BucketListAPI(Resource):
             if not isinstance(bucketlist, BucketList):
                 return bucketlist
 
+            if not result['name'].strip():
+                return error_response(status=400, error='Bad Request',
+                                      message='Please input a valid name')
+
             # edit the bucketlist
             new_name = result['name']
             bucketlist.name = new_name
@@ -326,6 +344,10 @@ class BucketListAddItemAPI(Resource):
             if errors:
                 return error_response(validation_errors=errors)
 
+            if not result['name'].strip():
+                return error_response(status=400, error='Bad Request',
+                                      message='Please input a valid name')
+
             # fetch bucket list
             bucketlist = BucketList.query.get(bucket_list_id)
 
@@ -341,29 +363,34 @@ class BucketListAddItemAPI(Resource):
             elif bucketlist.user != g.user:
                 return response
 
-            else:
+            elif result.get("description"):
                 name = result['name']
-                description = result.get('description')
+                description = result.get('description').strip() or None
                 done = result.get('done')
 
-                # create bucketlist item object
-                bucketlist_item = BucketListItem(name=name,
-                                                 description=description,
-                                                 done=done)
+            else:
+                name = result['name']
+                description = result.get('description') or None
+                done = result.get('done')
 
-                # relate item to bucket list
-                bucketlist_item.bucket_list = bucketlist
+            # create bucketlist item object
+            bucketlist_item = BucketListItem(name=name,
+                                             description=description,
+                                             done=done)
 
-                # add bucket list item to db
-                db.session.add(bucketlist_item)
-                db.session.commit()
+            # relate item to bucket list
+            bucketlist_item.bucket_list = bucketlist
 
-                return success_response(
-                    message="Bucketlist item successfully created",
-                    status=201,
-                    added=bucketlist_item_schema.dump(
-                        bucketlist_item).data
-                    )
+            # add bucket list item to db
+            db.session.add(bucketlist_item)
+            db.session.commit()
+
+            return success_response(
+                message="Bucketlist item successfully created",
+                status=201,
+                added=bucketlist_item_schema.dump(
+                    bucketlist_item).data
+                )
 
         else:
             return error_response(status=400, error='Bad Request',
@@ -393,7 +420,9 @@ class BucketListEditItemAPI(Resource):
 
         # return 404 if bucket list item does not exist
         elif not bucketlist_item:
-            return response_404
+            return error_response(status=404, error='Not found',
+                                  message='Bucketlist item {} does not '
+                                  'exist'.format(id))
 
         # return item object
         else:
@@ -414,18 +443,26 @@ class BucketListEditItemAPI(Resource):
             if errors:
                 return error_response(validation_errors=errors)
 
+            if not result['name'].strip():
+                return error_response(status=400, error='Bad Request',
+                                      message='Please input a valid name')
+
+            elif result.get('name') and 'description' not in result:
+                bucketlist_item.name = result['name']
+                bucketlist_item.done = result.get('done') or False
+
             elif result.get('name') and not result.get('description'):
                 bucketlist_item.name = result['name']
                 bucketlist_item.done = result.get('done') or False
 
-            elif not result.get('name') and result.get('description'):
-                bucketlist_item.description = result['description']
-                bucketlist_item.done = result.get('done') or False
-
             else:
                 bucketlist_item.name = result['name']
-                bucketlist_item.description = result['description']
                 bucketlist_item.done = result.get('done') or False
+
+                if result.get('description').strip():
+                    bucketlist_item.description = result.get('description')
+                else:
+                    bucketlist_item.description = None
 
             # add modified bucket list item to db
             db.session.add(bucketlist_item)
