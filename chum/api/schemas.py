@@ -58,9 +58,12 @@ class BucketListItemSchema(Schema):
 
 
 class BucketListItemEditSchema(Schema):
-    name = fields.String()
-    description = fields.String()
-    done = fields.Boolean()
+    name = fields.String(load_only=True, required=True,
+                         error_messages={
+                             'required': 'Please send an item name'}
+                         )
+    description = fields.String(load_only=True, allow_none=True)
+    done = fields.Boolean(load_only=True, allow_none=True)
 
 
 class BucketListSchema(Schema):
@@ -83,7 +86,7 @@ class BucketListSchema(Schema):
         return obj.get_url()
 
 
-get_bucketlists_schema = BucketListSchema(exclude=('items',), many=True)
+get_bucketlists_schema = BucketListSchema(many=True)
 single_bucketlist_schema = BucketListSchema()
 bucketlist_item_schema = BucketListItemSchema()
 edit_bucketlist_item_schema = BucketListItemEditSchema()
