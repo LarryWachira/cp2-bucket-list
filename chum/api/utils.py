@@ -9,7 +9,7 @@ def error_response(validation_errors=None,
     if validation_errors:
         response = jsonify(
             {'status': status, 'error': error,
-             'validation_error(s)': validation_errors,
+             'validation_errors': validation_errors,
              'message': message}
         )
 
