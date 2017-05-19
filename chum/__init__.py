@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_migrate import Migrate
 from flask_restful import Api
+from flask_cors import CORS
 
 from config import app_configuration
 from .models import db
@@ -61,5 +62,7 @@ def create_app(config_name):
     api.add_resource(BucketListEditItemAPI,
                      '/api/v1/bucketlists/<int:bucket_list_id>/items/<int:id>',
                      endpoint='edit_bucketlist_item')
+
+    CORS(app)
 
     return app
