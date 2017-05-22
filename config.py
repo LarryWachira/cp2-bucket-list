@@ -10,6 +10,7 @@ class Config(object):
         'sqlite:///' + BASE_DIR + '/chum/chum.sqlite3'
     SECRET_KEY = os.getenv('SECRET_KEY') or \
         'abcd_1234_very_secret_key_that_is_secure'
+    JSON_SORT_KEYS = False
 
 
 class DevelopmentConfig(Config):
