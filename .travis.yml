@@ -3,9 +3,9 @@ language: python
 python:
   - "3.6.1"
 
-script:
-  - pip install -r requirements.txt
-  - nosetests --with-coverage --cover-package=chum -v
+install: pip install -r requirements.txt
+
+script: nosetests --with-coverage --cover-package=chum -v
 
 after_success: coveralls
 
