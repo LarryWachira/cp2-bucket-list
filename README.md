@@ -21,13 +21,11 @@ Chum is bucketlist app built with a flask API and an Angular 2 frontend. This re
 
 Chum's has a number of dependencies as detailed in the requirements.txt file. To run it, you'll need to install [Python 3.6](http://python.org) from Python's website or via [Homebrew](https://brew.sh/) package manager(recommended) if you're on MacOS and setup a virtual environment as illustrated [here](http://docs.python-guide.org/en/latest/dev/virtualenvs/). Dependencies that are built into Python have not been included.
 ______
-1. The first thing you need to do is to clone the repo by running the following command:
+1. The first thing you need to do is to clone the repo by running the following command: (If you do not have git, you can download the entire project on the link at the top right download of the repo provided by github.)
 `¢git clone https://github.com/LarryWachira/cp2-bucket-list.git`
-If you do not have git, you can download the entire project on the link at the top right download of the repo provided by github.
-2. Activate the virtual environment, navigate to the project folder and then run the following command to install all the requirements in one go:
+2. Activate the virtual environment, navigate to the project folder and then run the following command to install all the requirements in one go: (Make sure the command is run at the root of the project folder.)
 ` ¢pip install -r requirements.txt`
 
-Make sure the command is run at the root of the project folder.
 3. The next step is to set up a database for the backend. By default, it uses an SQlite database but set up a custom Postgres database, all you need to do is set a database URI environment variable eg:
 `¢export SQLALCHEMY_DATABASE_URI='postgresql://user:password@localhost:5432/db_name'`
 4. Run migrations:
@@ -36,7 +34,7 @@ Make sure the command is run at the root of the project folder.
 `¢export SECRET_KEY='your_secret'`
 6. You're now ready to start calling the api endpoints. Run this command to begin:
 `¢python run.py runserver`
-Pat yourself on the back if you get the following terminal output:
+7. Pat yourself on the back if you get the following terminal output:
 `* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)`
 
 ______
