@@ -92,4 +92,3 @@ bucketlist_item_schema = BucketListItemSchema()
 edit_bucketlist_item_schema = BucketListItemEditSchema()
 login_schema = UserLoginSchema()
 register_schema = UserRegisterSchema()
-

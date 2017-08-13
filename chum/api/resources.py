@@ -165,7 +165,7 @@ class BucketListsAPI(Resource):
         else:
             paginated_bucketlists = BucketList.query.filter_by(
                 user_id=current_user_id).filter(BucketList.name.ilike(
-                 '%' + search_term + '%')).order_by(
+                    '%' + search_term + '%')).order_by(
                 BucketList.date_modified.desc()).paginate(
                 page, limit, error_out=True)
 
@@ -306,7 +306,7 @@ class BucketListAPI(Resource):
 
             return success_response(message='Bucketlist successfully modified',
                                     modified=single_bucketlist_schema.dump(
-                                     bucketlist).data
+                                        bucketlist).data
                                     )
 
         else:
@@ -390,7 +390,7 @@ class BucketListAddItemAPI(Resource):
                 status=201,
                 added=bucketlist_item_schema.dump(
                     bucketlist_item).data
-                )
+            )
 
         else:
             return error_response(status=400, error='Bad Request',

@@ -35,7 +35,7 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expires_in=3600*24*7):
+    def generate_auth_token(self, expires_in=3600 * 24):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
         return 'Bearer ' + s.dumps({'id': self.id}).decode('utf-8')
 
@@ -56,9 +56,10 @@ class BucketList(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.now, nullable=False)
-    date_modified = db.Column(db.DateTime, default=datetime.now,
-                              onupdate=datetime.now, nullable=False)
+    date_created = db.Column(
+        db.DateTime, default=datetime.utcnow, nullable=False)
+    date_modified = db.Column(db.DateTime, default=datetime.utcnow,
+                              onupdate=datetime.utcnow, nullable=False)
     items = db.relationship('BucketListItem', backref='bucket_list',
                             lazy='dynamic', cascade="all, delete-orphan",
                             order_by='desc(BucketListItem.date_modified)')
@@ -77,9 +78,9 @@ class BucketListItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, nullable=False)
     description = db.Column(db.Text, index=True, nullable=True)
-    date_created = db.Column(db.DateTime, default=datetime.now)
-    date_modified = db.Column(db.DateTime, default=datetime.now,
-                              onupdate=datetime.now)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_modified = db.Column(db.DateTime, default=datetime.utcnow,
+                              onupdate=datetime.utcnow)
     done = db.Column(db.Boolean, default=False, nullable=False)
     bucket_list_id = db.Column(db.Integer, db.ForeignKey('bucket_lists.id'),
                                nullable=False)
